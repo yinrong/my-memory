@@ -1,0 +1,14 @@
+# 日志文件
+*.log
+
+# 临时文件
+*.tmp
+*.swp
+*~
+
+# 解密后的文件
+hosts/*/decrypted/
+hosts/common/*.decrypted.md
+
+# 密码文件（绝对不能提交）
+.my-memory-password
