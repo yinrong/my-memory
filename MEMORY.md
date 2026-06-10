@@ -16,6 +16,12 @@
 
 ## 核心经验
 
+### 全局记忆备份
+- 全局记忆文件：`~/.claude/global-memory/MEMORY.md`
+- 备份仓库：`~/my-memory/`（remote: github.com/yinrong/my-memory）
+- **push 方法**：`cp ~/.claude/global-memory/MEMORY.md ~/my-memory/ && cd ~/my-memory && git add -A && git commit -m "sync: update global memory" && git push`
+- 每次修改全局记忆后都应该 push 备份
+
 ### GitHub 操作
 - **用户名**: yinrong
 - **gh CLI**: 已安装在 `~/bin/gh`，已认证
