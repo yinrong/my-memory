@@ -42,11 +42,33 @@
 - 详细规范：`/tdd-ddd` skill（`~/.claude/skills/tdd-ddd/SKILL.md`）
 
 ### 多 Agent 协作开发模式（防止上下文过长导致流程遗漏）
-- **主 agent**：监控状态、更新 FEATURES.md 文档状态、协调各子 agent
-- **文档 agent**：写详细设计文档和测试用例
-- **实现 agent**：按文档实现代码
-- **测试 agent**：运行测试、报告结果
-- **关键约束**：每个 agent 只负责自己的职责，主 agent 必须在子 agent 完成后立即更新 FEATURES.md 状态（🔲→✅），然后再提交。不能让实现 agent 负责更新文档——它上下文太长会遗漏
+
+**主 Agent 循环**：
+```
+1. 读 FEATURES.md，找所有 🔲 条目 → 全部 ✅ 则结束
+2. 按依赖分组，确定当前可并行的一批
+3. 并行启动若干子 Agent（每个传入：功能编号 + design doc 路径 + 代码库状态）
+4. 等待子 Agent 汇报：
+   - PASS → 立即更新 FEATURES.md ✅，检查是否解锁新条目
+   - 卡住 → 介入分析，重新启动
+5. goto 1
+```
+
+**子 Agent 循环（严格 TDD）**：
+```
+1. 读 design doc，理解功能边界
+2. 写 E2E 测试
+3. 运行测试 → 必须 FAIL（意外 PASS = 测试写错，回 2）
+4. 写最小实现
+5. 运行测试：
+   - PASS → 汇报主 Agent
+   - FAIL → 分析原因：实现问题(修代码 goto 5) / 测试问题(修测试 goto 3)
+```
+
+**关键约束**：
+- 子 Agent 不碰 FEATURES.md，由主 Agent 统一更新状态
+- 某个子 Agent 完成立即更新，不等整批完成
+- 不使用 /code-iteration，只遵循 TDD+DDD 流程
 
 ### 测试中 Mock 与真实调用的规则
 - **新功能测试默认用真实 claude（或真实外部依赖），不用 mock**
