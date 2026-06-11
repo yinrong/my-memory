@@ -68,13 +68,19 @@
 
 ### 项目文件规范
 
-| 文件 | 受众 | 内容 |
-|------|------|------|
+| 文件/目录 | 受众 | 内容 |
+|-----------|------|------|
 | `CLAUDE.md` | AI | 架构约束、开发规范、关键决策 |
 | `README.md` | 人 | 是什么、怎么装、怎么跑 |
-| `FEATURES.md` | AI+人 | 功能清单+状态+测试映射（DDD 核心文件） |
+| `FEATURES.md` | AI+人 | **功能目录**：功能清单+状态+测试映射，复杂功能链接到详细设计文档 |
+| `docs/design/*.md` | AI+人 | 单个功能的详细设计（方案、接口、待确认问题），由 FEATURES.md 中的条目链接 |
 
 不需要：`ARCHITECTURE.md`（与CLAUDE.md重复）、`CHANGELOG.md`（git log已有）、`TODO.md`（与FEATURES.md重复）
+
+**FEATURES.md 与 design docs 的关系**：
+- FEATURES.md 是目录，每个功能条目可以链接到 `docs/design/xxx.md`
+- design docs 是详细规范，但**结论必须同步回 FEATURES.md 的状态列**
+- 两者不能分裂：design docs 里的"待确认问题"一旦确认，必须更新 FEATURES.md 对应条目
 
 ### 常见失败模式
 - ❌ 认为自己"做不到"而要求用户手动操作
