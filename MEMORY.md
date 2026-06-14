@@ -106,12 +106,12 @@
 - design docs 是详细规范，但**结论必须同步回 FEATURES.md 的状态列**
 - 两者不能分裂：design docs 里的"待确认问题"一旦确认，必须更新 FEATURES.md 对应条目
 
-### Flutter 项目的 E2E 测试要求
+### Flutter 项目的测试规范
 
-- `flutter test` 只验证 Dart 逻辑，**不验证 Android 构建**
-- Flutter 项目必须额外验证：`flutter build apk --release` 成功，产物存在
+- **唯一必须的测试**：`flutter test integration_test/`（UI 模拟交互测试，在真实模拟器/设备上运行）
+- `flutter test`（Dart 单元测试）**不需要写**——和服务端的单元测试一样，属于可省略的层
 - Flutter 项目必须用 `flutter create` 生成完整脚手架，不能手动创建 Android 目录
-- 子 Agent 完成 Flutter 功能后，主 Agent 必须运行 `flutter build apk --release` 验证
+- integration test 需要模拟器运行：`flutter test integration_test/ -d <device-id>`
 
 ### 常见失败模式
 - ❌ 认为自己"做不到"而要求用户手动操作
