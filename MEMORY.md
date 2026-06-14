@@ -38,7 +38,13 @@
 
 ### 开发流程（所有项目严格遵守）
 - **DDD + TDD 双驱动**：文档先行 → E2E 测试先行 → 实现 → 重构
-- **E2E 是唯一必须的测试**，单元测试可省略
+- **E2E 是唯一必须的测试，单元测试/集成测试一律不写**，无论什么项目、什么语言
+- E2E 的具体形式因项目而异：
+  - Node.js 服务端：Playwright (`npx playwright test`)
+  - Flutter App：`flutter test integration_test/`（在模拟器/真机上运行）
+  - 其他项目类比上述原则选择最接近真实用户行为的测试方式
+- **`flutter test`（Dart 单元测试）不写**，和服务端单元测试一样属于禁止层
+- Flutter 项目必须用 `flutter create` 生成完整脚手架，不能手动创建 Android 目录
 - 详细规范：`/tdd-ddd` skill（`~/.claude/skills/tdd-ddd/SKILL.md`）
 
 ### 多 Agent 协作开发模式（防止上下文过长导致流程遗漏）
@@ -106,12 +112,6 @@
 - design docs 是详细规范，但**结论必须同步回 FEATURES.md 的状态列**
 - 两者不能分裂：design docs 里的"待确认问题"一旦确认，必须更新 FEATURES.md 对应条目
 
-### Flutter 项目的测试规范
-
-- **唯一必须的测试**：`flutter test integration_test/`（UI 模拟交互测试，在真实模拟器/设备上运行）
-- `flutter test`（Dart 单元测试）**不需要写**——和服务端的单元测试一样，属于可省略的层
-- Flutter 项目必须用 `flutter create` 生成完整脚手架，不能手动创建 Android 目录
-- integration test 需要模拟器运行：`flutter test integration_test/ -d <device-id>`
 
 ### 常见失败模式
 - ❌ 认为自己"做不到"而要求用户手动操作
