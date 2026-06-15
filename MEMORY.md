@@ -117,9 +117,11 @@
 不需要：`ARCHITECTURE.md`（与CLAUDE.md重复）、`CHANGELOG.md`（git log已有）、`TODO.md`（与FEATURES.md重复）
 
 **FEATURES.md 与 design docs 的关系**：
-- FEATURES.md 是目录，每个功能条目可以链接到 `docs/design/xxx.md`
-- design docs 是详细规范，但**结论必须同步回 FEATURES.md 的状态列**
-- 两者不能分裂：design docs 里的"待确认问题"一旦确认，必须更新 FEATURES.md 对应条目
+- FEATURES.md 是唯一真相来源：功能清单、状态、测试映射、Roadmap 全部在这里
+- design docs 只写：技术方案、架构决策、接口规范、已确认决策
+- **design docs 严禁包含 Roadmap、Phase、执行顺序** — 这些只属于 FEATURES.md
+- design docs 里的"待确认问题"一旦确认，必须更新 FEATURES.md 对应条目
+- 违反此规则必然产生两套机制，导致文档分裂
 
 
 ### 常见失败模式
