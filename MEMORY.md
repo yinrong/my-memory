@@ -107,9 +107,10 @@
   - 子 Agent 汇报测试全绿时，主 Agent 必须核查：一个真实用户现在能用这个功能吗？
 
 ### 环境操作规则
-- **prod 环境任何操作前必须先问用户确认** — restart/delete/stop/pm2 start(会同时影响 prod) 都算
+- **prod 和 prev 环境，必须有用户明确指令才能部署，不允许自动部署**
 - prod 含义：正在运行的稳定服务，中断 = 丢失用户工作
-- 只有 dev/test 环境可以自行操作
+- **只有 dev/test 环境可以自行操作**（重启、重建均可）
+- prod/prev 的任何操作（restart/delete/stop/start）都需要用户说"部署到prev"或"部署到prod"才能执行
 
 ### 包/依赖禁用
 - **禁止使用 `@anthropic-ai/claude-code` npm 包** — 包含内核访问 BUG，相关进程无法响应 signal（kill 不掉）。直接调用系统已安装的 `claude` 二进制即可。
