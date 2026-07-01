@@ -1,6 +1,39 @@
-# My Memory - 跨主机全局记忆同步系统
+# My Memory - Claude Code 全局记忆（Git 同步）
 
-自动同步和融合多台机器上的 Claude Code 全局记忆，支持加密存储。
+将 Claude Code 的记忆目录指向本 Git 仓库，实现跨会话/跨主机的记忆持久化与同步。
+
+## 新机器初始化（一键）
+
+```bash
+# 1. 克隆本仓库（GitHub 和 Gitee 共用同一 SSH key）
+git clone git@github.com:yinrong/my-memory.git ~/my-memory
+
+# 2. 确保 Claude Code 项目记忆目录存在（home 目录对应的项目路径）
+mkdir -p ~/.claude/projects/-home-ubuntu
+
+# 3. 若 memory 目录已存在则移除（空目录或旧 symlink）
+rm -rf ~/.claude/projects/-home-ubuntu/memory
+
+# 4. 创建 symlink：Claude Code 的记忆直接读写本仓库
+ln -s ~/my-memory ~/.claude/projects/-home-ubuntu/memory
+
+# 5. 验证
+ls ~/.claude/projects/-home-ubuntu/memory/MEMORY.md
+```
+
+执行完毕后，Claude Code 在 `~/` 下任何项目的对话中都会自动加载 `MEMORY.md` 作为全局记忆。
+
+### 原理
+
+Claude Code 的 auto memory 功能会读写 `~/.claude/projects/<escaped-cwd>/memory/` 目录。通过 symlink 到本 git 仓库，记忆文件的变更可以用标准 git 工作流推送/拉取，实现多机同步。
+
+### 同步记忆到远端
+
+```bash
+cd ~/my-memory && git add -A && git commit -m "sync: update memory" && git push
+```
+
+---
 
 ## 功能特性
 
