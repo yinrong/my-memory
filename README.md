@@ -1,6 +1,205 @@
-# My Memory - Claude Code 全局记忆（Git 同步）
+# My Memory - Claude Code / Codex 全局记忆（Git 同步）
 
-将 Claude Code 的记忆目录指向本 Git 仓库，实现跨会话/跨主机的记忆持久化与同步。
+将 AI 编程工具的长期记忆沉淀到本 Git 仓库，实现跨会话、跨主机的记忆持久化与同步。
+
+本仓库的核心原则：
+
+- `MEMORY.md` 是人可读、可审查、可 Git 同步的共享记忆入口。
+- Claude Code 可以直接把自己的全局记忆文件或记忆目录指向本仓库。
+- Codex 不应直接同步自动生成的本地 memories；需要长期稳定生效的规则应整理进 `AGENTS.md`。
+- 任何包含 token、密码、cookie、私钥、客户数据的内容都不要提交到本仓库，必要时只提交加密文件。
+
+---
+
+## Claude Code 与 Codex 如何使用本仓库
+
+| 场景 | Claude Code | Codex |
+| --- | --- | --- |
+| 下载 | `git clone git@github.com:yinrong/my-memory.git ~/my-memory` | 同左 |
+| 主要入口 | `~/my-memory/MEMORY.md` | 推荐 `~/my-memory/codex/AGENTS.md`，也可从 `MEMORY.md` 提炼 |
+| 自动加载方式 | 将 Claude Code 的全局记忆文件/目录 symlink 到本仓库 | 将 `~/.codex/AGENTS.md` symlink 到仓库中的 Codex 指令文件 |
+| 自动记忆 | Claude Code 的 auto memory 可以直接写入被 symlink 的文件/目录 | Codex memories 是本机生成状态，默认不提交；稳定规则写入 `AGENTS.md` |
+| 更新 | Claude Code 修改记忆后，在本仓库 commit | Codex 侧先把有价值的经验整理进 `codex/AGENTS.md`，再 commit |
+| 上传 | `git pull --rebase` 后 `git push` | 同左 |
+| 冲突处理 | 合并 `MEMORY.md`，保留互补经验，删除重复项 | 合并 `codex/AGENTS.md`，只保留明确、稳定、可执行的规则 |
+
+### Claude Code：下载、利用、更新、上传
+
+#### 1. 下载
+
+```bash
+git clone git@github.com:yinrong/my-memory.git ~/my-memory
+```
+
+#### 2. 利用本仓库作为全局记忆
+
+本仓库目前以 `MEMORY.md` 作为全局记忆入口。优先使用 Claude Code 全局记忆路径：
+
+```bash
+mkdir -p ~/.claude/global-memory
+
+# 如果已经有旧文件，先备份再建立链接
+mv ~/.claude/global-memory/MEMORY.md ~/.claude/global-memory/MEMORY.md.bak.$(date +%Y%m%d%H%M%S) 2>/dev/null || true
+ln -s ~/my-memory/MEMORY.md ~/.claude/global-memory/MEMORY.md
+```
+
+如果你仍在使用 Claude Code 的项目级 auto memory 目录约定，也可以把对应项目目录下的 `memory/` 指向本仓库：
+
+```bash
+mkdir -p ~/.claude/projects/-home-ubuntu
+rm -rf ~/.claude/projects/-home-ubuntu/memory
+ln -s ~/my-memory ~/.claude/projects/-home-ubuntu/memory
+```
+
+#### 3. 更新并上传
+
+如果使用 symlink，Claude Code 写入全局记忆后，本仓库会直接出现文件变化：
+
+```bash
+cd ~/my-memory
+git status
+git pull --rebase
+git add -A
+git commit -m "sync: update claude memory"
+git push
+```
+
+如果没有使用 symlink，先手动复制再提交：
+
+```bash
+cp ~/.claude/global-memory/MEMORY.md ~/my-memory/MEMORY.md
+cd ~/my-memory
+git pull --rebase
+git add MEMORY.md
+git commit -m "sync: update claude memory"
+git push
+```
+
+#### 4. 冲突处理
+
+`git pull --rebase` 出现冲突时，优先按语义合并，而不是简单选择某一边：
+
+- 两边都是新增经验：都保留，放到合适标题下。
+- 同一规则表达重复：保留更短、更明确的一条。
+- 同一规则互相矛盾：保留最新确认过的规则，并加一句适用条件。
+- 涉及账号、token、密码、cookie、私钥：不要提交明文，改成“凭证保存在本机某安全位置”的描述。
+
+解决后执行：
+
+```bash
+git add MEMORY.md
+git rebase --continue
+git push
+```
+
+### Codex：下载、利用、更新、上传
+
+Codex 的官方建议是：`AGENTS.md` 承载每次都必须遵守的稳定指令，memories 只作为辅助回忆层。也就是说，本仓库对 Codex 最适合作为“人工维护的长期规则仓库”，而不是直接同步 Codex 自动生成的本地 memory 状态。
+
+#### 1. 下载
+
+```bash
+git clone git@github.com:yinrong/my-memory.git ~/my-memory
+```
+
+#### 2. 利用本仓库作为 Codex 全局指令
+
+推荐在仓库里单独维护 Codex 指令文件，再链接到 Codex home：
+
+```bash
+mkdir -p ~/my-memory/codex ~/.codex
+
+# 第一次使用时，可以从 MEMORY.md 提炼一份 Codex 版本
+cp ~/my-memory/MEMORY.md ~/my-memory/codex/AGENTS.md
+
+# 让 Codex 在任何项目中自动加载这份全局指令
+ln -s ~/my-memory/codex/AGENTS.md ~/.codex/AGENTS.md
+```
+
+之后需要长期生效的偏好、开发流程、禁用项、验收标准，都写入：
+
+```text
+~/my-memory/codex/AGENTS.md
+```
+
+项目专属规则仍应写在具体项目仓库的 `AGENTS.md`，不要塞进全局文件。
+
+#### 3. 启用 Codex 自动 memories（可选）
+
+Codex 的自动 memories 是本机生成状态，用来帮助回忆上下文。它适合“辅助想起”，不适合当成必须遵守的规则来源。
+
+在 `~/.codex/config.toml` 中开启：
+
+```toml
+[features]
+memories = true
+
+[memories]
+generate_memories = true
+use_memories = true
+```
+
+也可以在 Codex 桌面端设置里打开 memories，或在任务中使用 `/memories` 控制当前任务是否读取/生成 memories。
+
+不要把 Codex 自动生成的本地 memories 目录或数据库直接提交到这个仓库。需要跨机器稳定复用的内容，先人工审查、去掉敏感信息，再整理进 `codex/AGENTS.md` 或 `MEMORY.md`。
+
+#### 4. 更新并上传
+
+Codex 侧推荐的同步节奏：
+
+```bash
+cd ~/my-memory
+git pull --rebase
+
+# 编辑 codex/AGENTS.md：只加入稳定、明确、可执行的规则
+git add codex/AGENTS.md README.md MEMORY.md
+git commit -m "sync: update codex memory"
+git push
+```
+
+如果某条经验同时适用于 Claude Code 和 Codex：
+
+- 写入 `MEMORY.md`，作为共享记忆。
+- 再把“必须执行”的部分提炼到 `codex/AGENTS.md`。
+
+如果只适用于 Codex：
+
+- 写入 `codex/AGENTS.md`。
+
+如果只是一次任务的临时背景：
+
+- 不写入本仓库，留在当前对话上下文即可。
+
+#### 5. 冲突处理
+
+Codex 的冲突处理重点是避免全局指令膨胀：
+
+- 两边都新增规则：只保留会反复影响未来任务的规则。
+- 经验性描述太长：压缩成“什么时候触发 + 必须怎么做”。
+- Claude Code 专属规则：留在 `MEMORY.md` 或 Claude Code 区域，不要写入 Codex 全局 `AGENTS.md`。
+- Codex 专属规则：放到 `codex/AGENTS.md`，不要强迫 Claude Code 读取。
+- 项目规则和全局规则冲突：以项目内更具体的 `AGENTS.md` 为准，全局文件只保留通用默认值。
+
+解决冲突后：
+
+```bash
+git add MEMORY.md codex/AGENTS.md
+git rebase --continue
+git push
+```
+
+### 推荐目录约定
+
+```text
+my-memory/
+├── README.md
+├── MEMORY.md                  # Claude Code 与通用共享记忆
+├── feishu-doc-workflow.md
+└── codex/
+    └── AGENTS.md              # Codex 全局稳定指令，建议 symlink 到 ~/.codex/AGENTS.md
+```
+
+当前仓库可能尚未创建 `codex/AGENTS.md`。第一次接入 Codex 时，用上面的命令从 `MEMORY.md` 复制一份，再人工删掉 Claude Code 专属内容即可。
 
 ## 新机器初始化（一键）
 
@@ -35,7 +234,11 @@ cd ~/my-memory && git add -A && git commit -m "sync: update memory" && git push
 
 ---
 
-## 功能特性
+## 自动化同步方案（脚本存在时）
+
+下面是本仓库规划/历史约定的自动化同步方案。当前分支如果没有 `setup.sh`、`sync-memory.sh`、`pull-and-merge.sh`、`decrypt-memory.sh`，请以上面的手动 Git 流程为准；只有在脚本实际存在后，才执行本节命令。
+
+### 功能特性
 
 - ✅ **自动定时同步**：每天自动推送本机记忆到 GitHub
 - ✅ **加密存储**：使用密码加密，GitHub 上无法直接读取
@@ -48,10 +251,10 @@ cd ~/my-memory && git add -A && git commit -m "sync: update memory" && git push
 ```
 my-memory/
 ├── README.md                 # 本文件
-├── setup.sh                  # 一键安装脚本
-├── sync-memory.sh            # 同步脚本（加密、推送）
-├── pull-and-merge.sh         # 拉取并融合脚本
-├── decrypt-memory.sh         # 解密查看脚本
+├── setup.sh                  # 可选：一键安装脚本
+├── sync-memory.sh            # 可选：同步脚本（加密、推送）
+├── pull-and-merge.sh         # 可选：拉取并融合脚本
+├── decrypt-memory.sh         # 可选：解密查看脚本
 ├── .gitignore
 └── hosts/
     ├── <hostname>/           # 每台主机一个目录
