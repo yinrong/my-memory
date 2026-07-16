@@ -232,6 +232,29 @@ Claude Code 的 auto memory 功能会读写 `~/.claude/projects/<escaped-cwd>/me
 cd ~/my-memory && git add -A && git commit -m "sync: update memory" && git push
 ```
 
+### 每周平均一次自动 push
+
+如果希望 cron 每天检查一次，但 7 天内已经成功执行过就跳过，使用仓库内的脚本：
+
+```bash
+chmod +x ~/my-memory/weekly-push-if-due.sh
+
+# 每天 03:00 检查一次；脚本内部保证 7 天内成功执行过就跳过
+(crontab -l 2>/dev/null; echo "0 3 * * * cd ~/my-memory && ./weekly-push-if-due.sh >> ~/my-memory/weekly-push.log 2>&1") | crontab -
+```
+
+脚本会把上次成功执行时间记录在：
+
+```text
+~/.local/state/my-memory/last-successful-push
+```
+
+需要调整周期时，可以设置环境变量，例如每 14 天一次：
+
+```cron
+0 3 * * * cd ~/my-memory && MY_MEMORY_INTERVAL_DAYS=14 ./weekly-push-if-due.sh >> ~/my-memory/weekly-push.log 2>&1
+```
+
 ---
 
 ## 自动化同步方案（脚本存在时）
@@ -375,11 +398,11 @@ openssl enc -aes-256-cbc -d -pbkdf2 -in file.md.enc -out file.md -k 'your-passwo
 
 ## 定时任务
 
-安装后会创建 cron 任务：
+安装后可创建 cron 任务：
 
 ```cron
-# 每天 03:00 同步记忆到 GitHub
-0 3 * * * cd ~/my-memory && ./sync-memory.sh >> ~/my-memory/sync.log 2>&1
+# 每天 03:00 检查一次；7 天内成功执行过则跳过
+0 3 * * * cd ~/my-memory && ./weekly-push-if-due.sh >> ~/my-memory/weekly-push.log 2>&1
 
 # 每天 03:30 拉取并融合
 30 3 * * * cd ~/my-memory && ./pull-and-merge.sh >> ~/my-memory/merge.log 2>&1
@@ -392,7 +415,7 @@ crontab -l | grep my-memory
 
 查看日志：
 ```bash
-tail -f ~/my-memory/sync.log
+tail -f ~/my-memory/weekly-push.log
 tail -f ~/my-memory/merge.log
 ```
 
