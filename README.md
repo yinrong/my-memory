@@ -232,15 +232,17 @@ Claude Code 的 auto memory 功能会读写 `~/.claude/projects/<escaped-cwd>/me
 cd ~/my-memory && git add -A && git commit -m "sync: update memory" && git push
 ```
 
-### 每周平均一次自动 push
+### 开机/登录后自动检查并按周 push
 
-如果希望 cron 每天检查一次，但 7 天内已经成功执行过就跳过，使用仓库内的脚本：
+如果希望 macOS 在用户登录后自动检查一次，并且 7 天内已经成功执行过就跳过，使用仓库内的 LaunchAgent 配置：
 
 ```bash
 chmod +x ~/my-memory/weekly-push-if-due.sh
 
-# 每天 03:00 检查一次；脚本内部保证 7 天内成功执行过就跳过
-(crontab -l 2>/dev/null; echo "0 3 * * * cd ~/my-memory && ./weekly-push-if-due.sh >> ~/my-memory/weekly-push.log 2>&1") | crontab -
+mkdir -p ~/Library/LaunchAgents
+cp ~/my-memory/launchd/com.yinrong.my-memory.weekly-push.plist ~/Library/LaunchAgents/
+launchctl unload ~/Library/LaunchAgents/com.yinrong.my-memory.weekly-push.plist 2>/dev/null || true
+launchctl load ~/Library/LaunchAgents/com.yinrong.my-memory.weekly-push.plist
 ```
 
 脚本会把上次成功执行时间记录在：
@@ -251,8 +253,8 @@ chmod +x ~/my-memory/weekly-push-if-due.sh
 
 需要调整周期时，可以设置环境变量，例如每 14 天一次：
 
-```cron
-0 3 * * * cd ~/my-memory && MY_MEMORY_INTERVAL_DAYS=14 ./weekly-push-if-due.sh >> ~/my-memory/weekly-push.log 2>&1
+```bash
+MY_MEMORY_INTERVAL_DAYS=14 ~/my-memory/weekly-push-if-due.sh
 ```
 
 ---
@@ -321,7 +323,7 @@ bash setup.sh
 ### 3. 自动运行
 
 安装后，系统会：
-- ✅ 每天 03:00 自动同步本机记忆到 GitHub
+- ✅ 用户登录后自动检查是否需要同步本机记忆到 GitHub
 - ✅ 每天 03:30 自动拉取并融合其他主机的记忆
 - ✅ 融合后的记忆自动应用到本机 Claude Code
 
@@ -396,27 +398,25 @@ openssl enc -aes-256-cbc -d -pbkdf2 -in file.md.enc -out file.md -k 'your-passwo
 - ✅ 解密需要本地密码文件
 - ✅ `.my-memory-password` 加入 `.gitignore`
 
-## 定时任务
+## 自动任务
 
-安装后可创建 cron 任务：
+安装后可创建 macOS LaunchAgent：
 
-```cron
-# 每天 03:00 检查一次；7 天内成功执行过则跳过
-0 3 * * * cd ~/my-memory && ./weekly-push-if-due.sh >> ~/my-memory/weekly-push.log 2>&1
-
-# 每天 03:30 拉取并融合
-30 3 * * * cd ~/my-memory && ./pull-and-merge.sh >> ~/my-memory/merge.log 2>&1
+```bash
+mkdir -p ~/Library/LaunchAgents
+cp ~/my-memory/launchd/com.yinrong.my-memory.weekly-push.plist ~/Library/LaunchAgents/
+launchctl unload ~/Library/LaunchAgents/com.yinrong.my-memory.weekly-push.plist 2>/dev/null || true
+launchctl load ~/Library/LaunchAgents/com.yinrong.my-memory.weekly-push.plist
 ```
 
-查看定时任务：
+查看自动任务：
 ```bash
-crontab -l | grep my-memory
+launchctl list | grep my-memory
 ```
 
 查看日志：
 ```bash
 tail -f ~/my-memory/weekly-push.log
-tail -f ~/my-memory/merge.log
 ```
 
 ## 多主机示例
